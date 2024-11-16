@@ -1,52 +1,12 @@
+#ifndef DELAUNAYTRIANGULATION_H
+#define DELAUNAYTRIANGULATION_H
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
-
-// Classe représentant un point dans le plan 2D
-class Point {
-public:
-    double x, y;
-    
-    Point(double x = 0, double y = 0) : x(x), y(y) {}
-
-    bool operator==(const Point& other) const {
-        return (x == other.x && y == other.y);
-    }
-};
-
-// Classe représentant un triangle
-class Triangle {
-public:
-    Point a, b, c;
-
-    Triangle(const Point& a, const Point& b, const Point& c) : a(a), b(b), c(c) {}
-
-    // Méthode pour vérifier si un point p est à l'intérieur du cercle circonscrit du triangle
-    bool isInCircumcircle(const Point& p) const {
-        double ax = a.x - p.x;
-        double ay = a.y - p.y;
-        double bx = b.x - p.x;
-        double by = b.y - p.y;
-        double cx = c.x - p.x;
-        double cy = c.y - p.y;
-
-        double det = (ax * ax + ay * ay) * (bx * cy - by * cx) -
-                     (bx * bx + by * by) * (ax * cy - ay * cx) +
-                     (cx * cx + cy * cy) * (ax * by - ay * bx);
-
-        return det > 0;
-    }
-
-    bool operator==(const Triangle& other) const {
-        return (a.x == other.a.x && a.y == other.a.y &&
-                b.x == other.b.x && b.y == other.b.y &&
-                c.x == other.c.x && c.y == other.c.y);
-    }
-
-};
-
-// Classe représentant la triangulation de Delaunay
+#include "Point.h"
+#include "Triangle.h"
+#include <fstream>
 class DelaunayTriangulation {
 private:
     std::vector<Triangle> triangles;
@@ -135,7 +95,7 @@ public:
             }), triangles.end());
     }
 
-private:
+private: // TODO why is it pivate tho ?
     // Méthode pour ajouter une arête si elle est unique
     void addEdgeIfUnique(std::vector<std::pair<Point, Point>>& edges, const std::pair<Point, Point>& edge) {
         for (auto it = edges.begin(); it != edges.end(); ++it) {
@@ -158,3 +118,5 @@ private:
     }
 
 };
+
+#endif 

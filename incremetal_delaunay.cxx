@@ -1,7 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include "Classes.h"
+//#include "Classes.h"
+#include "DelaunayTrianglulation.h"
+#include "Triangle.h"
+#include "Point.h"
 #include <cstdlib> 
 #include <ctime> 
 
@@ -16,9 +19,9 @@ int main() {
     
     std::vector<Point> points;
     for (int i = 0; i < 100; ++i) {
-        double x = static_cast<double>(std::rand()) / RAND_MAX;
+        double x = static_cast<double>(std::rand()) / RAND_MAX; // we divide by rand_max to normalize in [0,1]
         double y = static_cast<double>(std::rand()) / RAND_MAX;
-        points.emplace_back(x, y);
+        points.emplace_back(x, y); //todo why emplace_back and not just push_back
     }
     
     triangulation.initializeWithSuperTriangle();
