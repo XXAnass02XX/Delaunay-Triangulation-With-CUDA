@@ -1,136 +1,60 @@
-#include "Classes.cuh"
 #include <iostream>
-#include <fstream>
-#include <cuda_runtime.h>
-#include <curand.h>
-#include <curand_kernel.h>
-#include <algorithm>
 #include <vector>
+#include <cuda_runtime.h>
+#include <cmath>
+#include "Classes.cuh"
+#include <ctime> 
 
-#define NUM_POINTS 10
-#define BLOCK_SIZE 256
+#define NUM_POINTS 5
 
-__global__ void generateRandomPoints(Point* points) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < NUM_POINTS) {
-        curandState state;
-        curand_init((unsigned long long)clock() + idx, 0, 0, &state);
-        points[idx].x = curand_uniform(&state) * 2000 - 1000; // Random x between -1000 and 1000
-        points[idx].y = curand_uniform(&state) * 2000 - 1000; // Random y between -1000 and 1000
-    }
-}
-
-__global__ void findBadTriangles(const Triangle* triangles, int numTriangles, const Point p, bool* badTriangles) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < numTriangles) {
-        bool isBad = triangles[idx].isInCircumcircle(p);
-        badTriangles[idx] = isBad;
-        // Debug print (only on the first thread in the block to avoid excessive output)
-        if (threadIdx.x == 0) {
-            printf("Triangle %d: %s\n", idx, isBad ? "Bad" : "Good");
-        }
-    }
-}
-
-
-void exportTriangles(const std::vector<Triangle>& triangles, const std::string& filename) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file for writing!" << std::endl;
-        return;
-    }
-    for (const auto& tri : triangles) {
-        file << tri.a.x << " " << tri.a.y << "\n";
-        file << tri.b.x << " " << tri.b.y << "\n";
-        file << tri.c.x << " " << tri.c.y << "\n\n";
-    }
-    file.close();
-}
 
 int main() {
-    DelaunayTriangulation triangulation;
-    triangulation.initializeWithSuperTriangle();
+    std::srand(static_cast<unsigned>(std::time(0)));
+    // Number of points for the Delaunay triangulation
 
-    std::vector<Point> h_points(NUM_POINTS);
-    Point* d_points;
-    cudaMalloc(&d_points, NUM_POINTS * sizeof(Point));
-
-    int threadsPerBlock = BLOCK_SIZE;
-    int blocksPerGrid = (NUM_POINTS + threadsPerBlock - 1) / threadsPerBlock;
-
-    std::cout << "Generating random points on the device..." << std::endl;
-    generateRandomPoints<<<blocksPerGrid, threadsPerBlock>>>(d_points);
-    cudaDeviceSynchronize();  // Ensure the kernel finishes before moving on
-    std::cout << "Random points generated." << std::endl;
-
-    cudaMemcpy(h_points.data(), d_points, NUM_POINTS * sizeof(Point), cudaMemcpyDeviceToHost);
-    std::cout << "Points copied from device to host." << std::endl;
-
-    // Copy triangles to device
-    Triangle* d_triangles;
-    cudaMalloc(&d_triangles, triangulation.triangles.size() * sizeof(Triangle));
-    cudaMemcpy(d_triangles, triangulation.triangles.data(), triangulation.triangles.size() * sizeof(Triangle), cudaMemcpyHostToDevice);
-
-    std::vector<int> h_badTriangles(triangulation.triangles.size(), 0);
-    bool* d_badTriangles;
-    cudaMalloc(&d_badTriangles, h_badTriangles.size() * sizeof(bool));
-
+    // Create a vector of points (random points for this example)
+    std::vector<Point> points = {Point(0.27249, 0.484608),Point(0.353358, 0.493073),Point(0.548086, 0.270041),Point(0.526795, 0.516974),Point(0.22938, 0.331764)};
+    /*std::vector<Point> points;
     for (int i = 0; i < NUM_POINTS; ++i) {
-        std::cout << "Processing point " << i + 1 << "/" << NUM_POINTS << "..." << std::endl;
+        double x = static_cast<double>(std::rand()) / RAND_MAX;
+        double y = static_cast<double>(std::rand()) / RAND_MAX;
+        points.emplace_back(x, y);
+    }*/
 
-        Point p = h_points[i];
-        blocksPerGrid = (triangulation.triangles.size() + threadsPerBlock - 1) / threadsPerBlock;
+    // Create an instance of DelaunayTriangulation
+    DelaunayTriangulation delaunay;
 
-        std::cout << "Launching kernel to find bad triangles for point (" << p.x << ", " << p.y << ")..." << std::endl;
-        findBadTriangles<<<blocksPerGrid, threadsPerBlock>>>(
-            d_triangles, triangulation.triangles.size(), p, d_badTriangles
-        );
-        cudaDeviceSynchronize();  // Ensure the kernel finishes before moving on
-        std::cout << "Kernel completed for point (" << p.x << ", " << p.y << ")." << std::endl;
+    delaunay.initializeWithSuperTriangle();
 
-        cudaMemcpy(h_badTriangles.data(), d_badTriangles, h_badTriangles.size() * sizeof(bool), cudaMemcpyDeviceToHost);
+    // Add points one by one and update the triangulation
+    std::string filename;
+    for (int i = 0; i < NUM_POINTS; ++i) {
+        delaunay.addPoint(points[i]);
+        DelaunayTriangulation delau_debug = DelaunayTriangulation(delaunay);
+        delau_debug.removeTrianglesWithSuperVertices();
+        filename = "triangles_"  + std::to_string(i)+ ".txt";
+        delau_debug.exportTriangles(filename);
 
-        // Debug print to check bad triangles
-        std::cout << "Bad triangles detected for point (" << p.x << ", " << p.y << "): ";
-        for (int j = 0; j < h_badTriangles.size(); ++j) {
-            if (h_badTriangles[j]) {
-                std::cout << j << " ";  // Index of bad triangle
-            }
-        }
-        std::cout << std::endl;
-
-        // After finding bad triangles, remove them and add new ones
-        std::vector<Triangle> newTriangles;
-        std::vector<Triangle> remainingTriangles;
-        for (int j = 0; j < triangulation.triangles.size(); ++j) {
-            if (h_badTriangles[j]) {
-                std::cout << "Creating new triangles for bad triangle " << j << std::endl;
-                // Add new triangles based on the point p
-                newTriangles.push_back(Triangle(p, triangulation.triangles[j].a, triangulation.triangles[j].b));
-                newTriangles.push_back(Triangle(p, triangulation.triangles[j].b, triangulation.triangles[j].c));
-                newTriangles.push_back(Triangle(p, triangulation.triangles[j].c, triangulation.triangles[j].a));
-            } else {
-                remainingTriangles.push_back(triangulation.triangles[j]);
-            }
-        }
-
-        // Combine remaining and new triangles
-        triangulation.triangles = remainingTriangles;
-        triangulation.triangles.insert(triangulation.triangles.end(), newTriangles.begin(), newTriangles.end());
-        std::cout << "Point " << i + 1 << " processed. Total triangles: " << triangulation.triangles.size() << std::endl;
+        
+        std::cout << "----------------" << i  << std::endl;
     }
 
-    triangulation.removeTrianglesWithSuperVertices();
-    std::cout << "Removed super triangle vertices." << std::endl;
+    delaunay.removeTrianglesWithSuperVertices();
+    // Optionally, print the resulting triangles
+    std::cout << "Final number of triangles: " << delaunay.triangles.size() << std::endl;
+    for (const auto& triangle : delaunay.triangles) {
+        std::cout << "Triangle: (" << triangle.a.x << ", " << triangle.a.y << "), "
+                  << "(" << triangle.b.x << ", " << triangle.b.y << "), "
+                  << "(" << triangle.c.x << ", " << triangle.c.y << ")" << std::endl;
+    }
 
-    std::string filename = "triangles_" + std::to_string(NUM_POINTS) + ".txt";
-    exportTriangles(triangulation.triangles, filename);
+    // Construct the filename with the number of points
+    /*std::string filename = "triangles_" + std::to_string(points.size()) + ".txt";
 
-    std::cout << "Triangulation completed and exported to " << filename << std::endl;
+    // Export the triangles to a text file
+    delaunay.exportTriangles(filename);
 
-    cudaFree(d_points);
-    cudaFree(d_triangles);
-    cudaFree(d_badTriangles);
+    std::cout << "Triangulation completed and exported to triangles.txt" << std::endl;*/
 
     return 0;
 }

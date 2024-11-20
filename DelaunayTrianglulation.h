@@ -14,8 +14,8 @@ private:
 public:
     DelaunayTriangulation() {}
 
-    void addPoint(const Point& p) {
-        std::vector<Triangle> badTriangles;
+    void addPoint(const Point& p,int i) {
+        std::vector<Triangle> badTriangles; // TODO free these
         std::vector<std::pair<Point, Point>> polygonEdges;
 
         // Trouver tous les triangles dont le cercle circonscrit contient le point p
@@ -45,7 +45,22 @@ public:
         // std::cout << "Remaining triangles after removal: " << triangles.size() << std::endl;
 
         // Créer de nouveaux triangles reliant le point p aux arêtes de l'enveloppe
-        
+        std::cout << "The length of polygone edges is: " << polygonEdges.size() << std::endl;
+        std::string filename = "poly_added" + std::to_string(i) + ".txt";
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open file for writing!" << std::endl;
+            return;
+        }
+
+        // Export points and triangles
+        for (const auto& edge : polygonEdges) {
+            file << edge.first.x << " " << edge.first.y << "\n";
+            file << edge.second.x << " " << edge.second.y << "\n";
+            file << "\n";  // Separate each triangle with a blank line
+        }
+
+        file.close();
         for (const auto& edge : polygonEdges) {
             triangles.emplace_back(edge.first, edge.second, p);
             // std::cout << "Triangle created with vertices: (" << edge.first.x << ", " << edge.first.y << "), ("
@@ -58,9 +73,9 @@ public:
 
     void initializeWithSuperTriangle() {
         // Define a super triangle large enough to contain all points
-        Point p1(-1000, -1000);
-        Point p2(1000, -1000);
-        Point p3(0, 1000);
+        Point p1(-1.5, -1.5);
+        Point p2(1.5, -1.5);
+        Point p3(0, 1.5);
         triangles.emplace_back(p1, p2, p3);
     }
 
@@ -84,9 +99,9 @@ public:
     }
 
     void removeTrianglesWithSuperVertices() {
-        Point p1(-1000, -1000);
-        Point p2(1000, -1000);
-        Point p3(0, 1000);
+        Point p1(-1.5, -1.5);
+        Point p2(1.5, -1.5);
+        Point p3(0, 1.5);
         triangles.erase(std::remove_if(triangles.begin(), triangles.end(),
             [&](const Triangle& tri) {
                 return (tri.a == p1 || tri.a == p2 || tri.a == p3 ||
@@ -95,7 +110,7 @@ public:
             }), triangles.end());
     }
 
-private: // TODO why is it pivate tho ?
+private:
     // Méthode pour ajouter une arête si elle est unique
     void addEdgeIfUnique(std::vector<std::pair<Point, Point>>& edges, const std::pair<Point, Point>& edge) {
         for (auto it = edges.begin(); it != edges.end(); ++it) {
