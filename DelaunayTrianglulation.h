@@ -45,8 +45,7 @@ public:
         // std::cout << "Remaining triangles after removal: " << triangles.size() << std::endl;
 
         // Créer de nouveaux triangles reliant le point p aux arêtes de l'enveloppe
-        std::cout << "The length of polygone edges is: " << polygonEdges.size() << std::endl;
-        std::string filename = "poly_added" + std::to_string(i) + ".txt";
+        /*std::string filename = "seq_triangles_txt/seq_poly_added" + std::to_string(i) + ".txt";
         std::ofstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Error: Could not open file for writing!" << std::endl;
@@ -60,7 +59,7 @@ public:
             file << "\n";  // Separate each triangle with a blank line
         }
 
-        file.close();
+        file.close();*/
         for (const auto& edge : polygonEdges) {
             triangles.emplace_back(edge.first, edge.second, p);
             // std::cout << "Triangle created with vertices: (" << edge.first.x << ", " << edge.first.y << "), ("
@@ -112,6 +111,16 @@ public:
 
 private:
     // Méthode pour ajouter une arête si elle est unique
+    /*void addEdgeIfUnique(std::vector<std::pair<Point, Point>>& edges, const std::pair<Point, Point>& edge, double tolerance = 1e-9) {
+        for (auto it = edges.begin(); it != edges.end(); ++it) {
+            if ((it->first.isEqual(edge.second, tolerance) && it->second.isEqual(edge.first, tolerance)) ||
+                (it->first.isEqual(edge.first, tolerance) && it->second.isEqual(edge.second, tolerance))) {
+                edges.erase(it);
+                return;
+            }
+        }
+        edges.push_back(edge);
+    }*/
     void addEdgeIfUnique(std::vector<std::pair<Point, Point>>& edges, const std::pair<Point, Point>& edge) {
         for (auto it = edges.begin(); it != edges.end(); ++it) {
             if ((it->first.x == edge.second.x && it->first.y == edge.second.y &&

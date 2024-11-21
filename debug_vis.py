@@ -71,18 +71,37 @@ def plot_triangles(points, triangles,image_name, file_path):
     plt.ylabel('Y')
     plt.title('Delaunay Triangles')
     plt.savefig(image_name)
+#    plt.show()
+    plt.close()
+
+def plot_final_triangles(points, triangles,image_name):
+    plt.figure()
+    plt.triplot(points[:, 0], points[:, 1], triangles, 'bo-', markersize=5, linewidth=1)
+    plt.gca().set_aspect('equal')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('Delaunay Triangles')
+    plt.savefig(image_name)
     plt.show()
     plt.close()
-    
 
 
 # File path to your data
 # Replace with your actual file name
 n = len(sys.argv)
-if n > 1:
-    points, triangles = load_points_and_triangles("seq_triangles_5.txt")
-    plot_triangles(points, triangles,"seq_triangles.png", "poly_added4.txt")  
+if sys.argv[1] == "par":
+    folder = "par_triangles_"
+    file = "par"
+    start = 2
 else :
-    for i in range(5):
-        points, triangles = load_points_and_triangles(f"triangles_{i}.txt")
-        plot_triangles(points, triangles,f"triangles_{i}.png", f"poly_added{i}.txt")  
+    folder = "seq_triangles_"
+    file = "seq"
+    start = 0
+
+for i in range(start,0):
+    points, triangles = load_points_and_triangles(folder+"txt/"+file+f"_triangles_{i}.txt")
+    plot_triangles(points, triangles,folder+"img/"+file+f"_triangles_{i}.png", folder+"txt/"+file+f"_poly_added{i}.txt")
+
+i = 400
+points, triangles = load_points_and_triangles(folder+"txt/"+file+f"_triangles_{i}.txt")
+plot_final_triangles(points, triangles,folder+"img/"+file+f"_triangles_{i}.png")

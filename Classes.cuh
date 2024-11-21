@@ -52,9 +52,6 @@ __global__ void checkCircumcircle(Triangle* triangles, bool* isBadTriangle, cons
     if (idx < numTriangles) {
         isBadTriangle[idx] = triangles[idx].isInCircumcircle(p);// TODO wrap divergence
     }
-    if (isBadTriangle[idx]) {
-        printf("Triangle %d is bad for point (%f, %f)\n", idx, p.x, p.y);  // Debug print
-    }
 }
 
 
@@ -92,7 +89,7 @@ public:
         triangles.erase(std::remove_if(triangles.begin(), triangles.end(), isSuperVertexTriangle), triangles.end());
     }
 
-    void addPoint(const Point& p) {
+    void addPoint(const Point& p, int i) {
         std::vector<Triangle> badTriangles;
         std::vector<std::pair<Point, Point>> polygonEdges;
 
@@ -127,7 +124,21 @@ public:
         for (const auto& tri : badTriangles) {
             removeTriangle(tri);
         }
+        /*std::string filename = "par_triangles_txt/par_poly_added" + std::to_string(i) + ".txt";
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Error: Could not open file for writing!" << std::endl;
+            return;
+        }
 
+        // Export points and triangles
+        for (const auto& edge : polygonEdges) {
+            file << edge.first.x << " " << edge.first.y << "\n";
+            file << edge.second.x << " " << edge.second.y << "\n";
+            file << "\n";  // Separate each triangle with a blank line
+        }
+
+        file.close();*/
         // Step 4: Create new triangles with point p
         for (const auto& edge : polygonEdges) {
             triangles.emplace_back(edge.first, edge.second, p);
@@ -162,7 +173,6 @@ public:
             std::cerr << "Error: Could not open file for writing!" << std::endl;
             return;
         }
-        std::cout << triangles.size() << std::endl;
         // Export points and triangles
         for (const auto& tri : triangles) {
             file << tri.a.x << " " << tri.a.y << "\n";
