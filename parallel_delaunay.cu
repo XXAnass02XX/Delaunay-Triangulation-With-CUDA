@@ -2,7 +2,10 @@
 #include <vector>
 #include <cuda_runtime.h>
 #include <cmath>
-#include "Classes.cuh"
+//#include "Classes.cuh"
+#include "DelaunayTriangulation.cuh"
+#include "Point.cuh"
+#include "Triangle.cuh"
 #include <ctime> 
 
 #define NUM_POINTS 100*100

@@ -1,5 +1,5 @@
-#ifndef CLASSES_CUH
-#define CLASSES_CUH
+#ifndef DELAUNAYTRIANGULATION_CUH
+#define DELAUNAYTRIANGULATION_CUH
 
 #include <vector>
 #include <algorithm>
@@ -7,40 +7,8 @@
 #include <iostream>
 #include <cstdlib> 
 #include <fstream>  
-struct Point {
-    double x, y;
-
-    __host__ __device__ Point(double x = 0, double y = 0) : x(x), y(y) {}
-
-    __host__ __device__ bool operator==(const Point& other) const {
-        return (x == other.x && y == other.y);
-    }
-};
-
-struct Triangle {
-    Point a, b, c;
-
-    __host__ __device__ Triangle(const Point& a, const Point& b, const Point& c) : a(a), b(b), c(c) {}
-
-    __host__ __device__ bool isInCircumcircle(const Point& p) const {
-        double ax = a.x - p.x;
-        double ay = a.y - p.y;
-        double bx = b.x - p.x;
-        double by = b.y - p.y;
-        double cx = c.x - p.x;
-        double cy = c.y - p.y;
-
-        double det = (ax * ax + ay * ay) * (bx * cy - by * cx) -
-                     (bx * bx + by * by) * (ax * cy - ay * cx) +
-                     (cx * cx + cy * cy) * (ax * by - ay * bx);
-
-        return det > 0;
-    }
-
-    __host__ __device__ bool operator==(const Triangle& other) const {
-        return (a == other.a && b == other.b && c == other.c);
-    }
-};
+#include "Point.cuh"
+#include "Triangle.cuh"
 
 __global__ void checkCircumcircle(Triangle* triangles, bool* isBadTriangle, const Point p, int numTriangles) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -143,4 +111,4 @@ public:
     }
 };
 
-#endif // CLASSES_CUH
+#endif
