@@ -11,8 +11,6 @@ public:
     Point a, b, c;
 
     Triangle(const Point& a, const Point& b, const Point& c) : a(a), b(b), c(c) {}
-
-    // Méthode pour vérifier si un point p est à l'intérieur du cercle circonscrit du triangle
     bool isInCircumcircle(const Point& p) const {
         double ax = a.x - p.x;
         double ay = a.y - p.y;
