@@ -60,6 +60,7 @@ public:
         cudaMemcpy(h_isBadTriangle, d_isBadTriangle, numTriangles * sizeof(bool), cudaMemcpyDeviceToHost);
         for (int i = 0; i < numTriangles; ++i) { //TODO we can make this loop in par
             if (h_isBadTriangle[i]) {
+                //adding edges from bad triangles to make new ones after
                 badTriangles.push_back(triangles[i]);
                 //TODO we can make this three function call in par with three threads
                 addEdgeIfUnique(polygonEdges, {triangles[i].a, triangles[i].b});
