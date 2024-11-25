@@ -11,9 +11,10 @@
 #include "Triangle.cuh"
 
 __global__ void checkCircumcircle(Triangle* triangles, bool* isBadTriangle, const Point p, int numTriangles) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < numTriangles) {
-        isBadTriangle[idx] = triangles[idx].isInCircumcircle(p);// TODO wrap divergence
+    int threadIdx1D = threadIdx.x + threadIdx.y * blockDim.x;
+    int globalIdx = threadIdx1D + blockIdx.x * blockDim.x*blockDim.y;
+    if (globalIdx < numTriangles) {
+        isBadTriangle[globalIdx] = triangles[globalIdx].isInCircumcircle(p);// TODO wrap divergence
     }
 }
 
@@ -54,7 +55,9 @@ public:
         cudaMalloc(&d_triangles, numTriangles * sizeof(Triangle));
         cudaMalloc(&d_isBadTriangle, numTriangles * sizeof(bool));
         cudaMemcpy(d_triangles, triangles.data(), numTriangles * sizeof(Triangle), cudaMemcpyHostToDevice);
-        checkCircumcircle<<<numTriangles, 1>>>(d_triangles, d_isBadTriangle, p, numTriangles);
+        dim3 dimBlock(32,32);
+        dim3 dimGrid((numTriangles + 1024 - 1) / 1024);
+        checkCircumcircle<<<dimGrid, dimBlock>>>(d_triangles, d_isBadTriangle, p, numTriangles);
         cudaDeviceSynchronize();
         bool* h_isBadTriangle = new bool[numTriangles];
         cudaMemcpy(h_isBadTriangle, d_isBadTriangle, numTriangles * sizeof(bool), cudaMemcpyDeviceToHost);

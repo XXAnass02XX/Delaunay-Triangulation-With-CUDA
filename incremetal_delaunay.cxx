@@ -13,8 +13,8 @@ int main() {
     DelaunayTriangulation triangulation;
     std::srand(static_cast<unsigned>(std::time(0)));
    std::vector<Point> points;
-   for (int i = 0;i < 50;i++){
-    for (int j = 0;j < 50;j++){
+   for (int i = 0;i < 100;i++){
+    for (int j = 0;j < 100;j++){
         points.emplace_back(((float)i)/1000,((float)j)/1000);
     }
    }
