@@ -51,7 +51,7 @@ public:
         std::vector<std::pair<Point, Point>> polygonEdges;
         int numTriangles = triangles.size();
         Triangle* d_triangles;
-        bool* d_isBadTriangle;
+        bool* d_isBadTriangle;//TODO lmara jaya 
         cudaMalloc(&d_triangles, numTriangles * sizeof(Triangle));
         cudaMalloc(&d_isBadTriangle, numTriangles * sizeof(bool));
         cudaMemcpy(d_triangles, triangles.data(), numTriangles * sizeof(Triangle), cudaMemcpyHostToDevice);

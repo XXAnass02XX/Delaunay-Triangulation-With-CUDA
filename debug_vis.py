@@ -102,6 +102,6 @@ for i in range(start,0):
     points, triangles = load_points_and_triangles(folder+"txt/"+file+f"_triangles_{i}.txt")
     plot_triangles(points, triangles,folder+"img/"+file+f"_triangles_{i}.png", folder+"txt/"+file+f"_poly_added{i}.txt")
 
-i = 400
+i = 25
 points, triangles = load_points_and_triangles(folder+"txt/"+file+f"_triangles_{i}.txt")
 plot_final_triangles(points, triangles,folder+"img/"+file+f"_triangles_{i}.png")

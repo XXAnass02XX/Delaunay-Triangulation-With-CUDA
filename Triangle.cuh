@@ -12,6 +12,7 @@
 class Triangle {
     public:
     Point a, b, c;
+    //__host__ __device__ Triangle() : a(0), b(0), c(0) {}
 
     __host__ __device__ Triangle(const Point& a, const Point& b, const Point& c) : a(a), b(b), c(c) {}
 
